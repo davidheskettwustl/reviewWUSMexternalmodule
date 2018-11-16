@@ -475,56 +475,30 @@ class ProjectToProjectFieldReplicationExternalModule extends AbstractExternalMod
 	}
 
 	/** 
-	 * cleanInputData - clean up input data for database handling.
-	 */
-	private function cleanInputData($inputData)
-	{
-		$data = $inputData;
-	
-	  // sanitize the input of these symbols.
-	  $data = str_replace('"', '', $data);
-	  $data = str_replace("'", '', $data);
-	  $data = str_replace('$', '', $data);
-	  $data = str_replace('_', '', $data);
-	  $data = str_replace('%', '', $data);
-	  $data = str_replace('#', '', $data);
-	  $data = str_replace('|', '', $data);
-	  $data = str_replace('@', '', $data);
-	  $data = str_replace('&', '', $data);
-	  $data = str_replace(';', '', $data);
-	  $data = db_escape($data);
-
-		return $data;
-	}
-
-	/** 
 	 * isAllowedDestination - check if the destination will allow the source to save data in the destination records.
 	 */
 	private function isAllowedDestination($sourceId = null, $destId = null)
 	{
 		$allowedFlag = false;
 		
-		$cleanSourceId = '';
-		$cleanDestId   = '';
-		$cleanSourceId = (int)$this->cleanInputData($sourceId);  // probably do not need these protections as using the "type": "project-id" for the settings, leaving in here anyways
-		$cleanDestId   = (int)$this->cleanInputData($destId);
-		
-		if (is_int($cleanSourceId) && is_int($cleanDestId)) {
+		if ($destId) { // this value is pulled from the database and is a pure input to begin with and the caller method always provides the value.
+			//
 			// SELECT `value` as allowedSourceId FROM redcap_external_module_settings where project_id = 789 and `key` = 'allowed_project_id';
-			$sql = 'SELECT `value` as allowedSourceId FROM redcap_external_module_settings where project_id = ' . $cleanDestId . ' and `key` = ' ."'" . 'allowed_project_id' . "'" . '';
+			//
+			$sql = 'SELECT `value` as allowedSourceId FROM redcap_external_module_settings where project_id = ' . $destId . ' and `key` = ' ."'" . 'allowed_project_id' . "'" . '';
 			
 			$q = db_query($sql);
 	
 			// set the flag
 			if ($q) {
 				$allowedSourceId = db_result($q, 0, 'allowedSourceId');
-				$allowedFlag = ($allowedSourceId == $cleanSourceId ? true : false);
+				$allowedFlag = ($allowedSourceId == $sourceId ? true : false);
 			}
 		}
 		
 		return $allowedFlag;
 	}
-			
+		
 } // *** end class
 
 	// **********************************************************************	
